@@ -38,6 +38,12 @@ func NewSayEndpoints() []*api.Endpoint {
 			Method:  []string{"POST"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "Say.Message",
+			Path:    []string{"/greeter/message/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -45,6 +51,7 @@ func NewSayEndpoints() []*api.Endpoint {
 
 type SayService interface {
 	Hello(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
+	Message(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
 }
 
 type sayService struct {
@@ -69,15 +76,27 @@ func (c *sayService) Hello(ctx context.Context, in *Request, opts ...client.Call
 	return out, nil
 }
 
+func (c *sayService) Message(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error) {
+	req := c.c.NewRequest(c.name, "Say.Message", in)
+	out := new(Response)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Say service
 
 type SayHandler interface {
 	Hello(context.Context, *Request, *Response) error
+	Message(context.Context, *Request, *Response) error
 }
 
 func MicroRegisterSayHandler(s server.Server, hdlr SayHandler, opts ...server.HandlerOption) error {
 	type say interface {
 		Hello(ctx context.Context, in *Request, out *Response) error
+		Message(ctx context.Context, in *Request, out *Response) error
 	}
 	type Say struct {
 		say
@@ -89,6 +108,12 @@ func MicroRegisterSayHandler(s server.Server, hdlr SayHandler, opts ...server.Ha
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Say.Message",
+		Path:    []string{"/greeter/message/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&Say{h}, opts...))
 }
 
@@ -98,4 +123,8 @@ type sayHandler struct {
 
 func (h *sayHandler) Hello(ctx context.Context, in *Request, out *Response) error {
 	return h.SayHandler.Hello(ctx, in, out)
+}
+
+func (h *sayHandler) Message(ctx context.Context, in *Request, out *Response) error {
+	return h.SayHandler.Message(ctx, in, out)
 }

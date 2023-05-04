@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Say_Hello_FullMethodName = "/greeter.Say/Hello"
+	Say_Hello_FullMethodName   = "/greeter.Say/Hello"
+	Say_Message_FullMethodName = "/greeter.Say/Message"
 )
 
 // SayClient is the client API for Say service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SayClient interface {
 	Hello(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
+	Message(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
 }
 
 type sayClient struct {
@@ -46,11 +48,21 @@ func (c *sayClient) Hello(ctx context.Context, in *Request, opts ...grpc.CallOpt
 	return out, nil
 }
 
+func (c *sayClient) Message(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, Say_Message_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SayServer is the server API for Say service.
 // All implementations must embed UnimplementedSayServer
 // for forward compatibility
 type SayServer interface {
 	Hello(context.Context, *Request) (*Response, error)
+	Message(context.Context, *Request) (*Response, error)
 	mustEmbedUnimplementedSayServer()
 }
 
@@ -60,6 +72,9 @@ type UnimplementedSayServer struct {
 
 func (UnimplementedSayServer) Hello(context.Context, *Request) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Hello not implemented")
+}
+func (UnimplementedSayServer) Message(context.Context, *Request) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Message not implemented")
 }
 func (UnimplementedSayServer) mustEmbedUnimplementedSayServer() {}
 
@@ -92,6 +107,24 @@ func _Say_Hello_Handler(srv interface{}, ctx context.Context, dec func(interface
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Say_Message_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SayServer).Message(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Say_Message_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SayServer).Message(ctx, req.(*Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Say_ServiceDesc is the grpc.ServiceDesc for Say service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -102,6 +135,10 @@ var Say_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Hello",
 			Handler:    _Say_Hello_Handler,
+		},
+		{
+			MethodName: "Message",
+			Handler:    _Say_Message_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

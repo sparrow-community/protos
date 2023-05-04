@@ -17,4 +17,4 @@ plugins:
     out: ./
     opt:
       - paths=source_relative
-      - generate_unbound_methods=true
+      - generate_unbound_methods=false
