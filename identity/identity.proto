@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package identity;
+option go_package="./;identity";
+
+//import "identity/user.proto";
+
+import "google/api/annotations.proto";
