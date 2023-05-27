@@ -1,7 +1,7 @@
 version: v1
 name: buf.build/sparrow-community/protos
-deps:
-  - buf.build/googleapis/googleapis
+#deps:
+#  - buf.build/googleapis/googleapis
 breaking:
   use:
     - FILE

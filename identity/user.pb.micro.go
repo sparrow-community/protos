@@ -7,6 +7,8 @@ import (
 	fmt "fmt"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	proto "google.golang.org/protobuf/proto"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	math "math"
 )
 
@@ -44,14 +46,21 @@ func NewUserServiceEndpoints() []*api.Endpoint {
 			Method:  []string{"POST"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "UserService.RefreshToken",
+			Path:    []string{"/identity/user:refreshToken"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
 	}
 }
 
 // Client API for UserService service
 
 type UserService interface {
-	SignUp(ctx context.Context, in *UserSignUpRequest, opts ...client.CallOption) (*UserSignUpResponse, error)
-	SignIn(ctx context.Context, in *UserSignInRequest, opts ...client.CallOption) (*UserSignInResponse, error)
+	SignUp(ctx context.Context, in *UserSignUpRequest, opts ...client.CallOption) (*emptypb.Empty, error)
+	SignIn(ctx context.Context, in *UserSignInRequest, opts ...client.CallOption) (*TokenResponse, error)
+	RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...client.CallOption) (*TokenResponse, error)
 }
 
 type userService struct {
@@ -66,9 +75,9 @@ func NewUserService(name string, c client.Client) UserService {
 	}
 }
 
-func (c *userService) SignUp(ctx context.Context, in *UserSignUpRequest, opts ...client.CallOption) (*UserSignUpResponse, error) {
+func (c *userService) SignUp(ctx context.Context, in *UserSignUpRequest, opts ...client.CallOption) (*emptypb.Empty, error) {
 	req := c.c.NewRequest(c.name, "UserService.SignUp", in)
-	out := new(UserSignUpResponse)
+	out := new(emptypb.Empty)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -76,9 +85,19 @@ func (c *userService) SignUp(ctx context.Context, in *UserSignUpRequest, opts ..
 	return out, nil
 }
 
-func (c *userService) SignIn(ctx context.Context, in *UserSignInRequest, opts ...client.CallOption) (*UserSignInResponse, error) {
+func (c *userService) SignIn(ctx context.Context, in *UserSignInRequest, opts ...client.CallOption) (*TokenResponse, error) {
 	req := c.c.NewRequest(c.name, "UserService.SignIn", in)
-	out := new(UserSignInResponse)
+	out := new(TokenResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userService) RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...client.CallOption) (*TokenResponse, error) {
+	req := c.c.NewRequest(c.name, "UserService.RefreshToken", in)
+	out := new(TokenResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -89,14 +108,16 @@ func (c *userService) SignIn(ctx context.Context, in *UserSignInRequest, opts ..
 // Server API for UserService service
 
 type UserServiceHandler interface {
-	SignUp(context.Context, *UserSignUpRequest, *UserSignUpResponse) error
-	SignIn(context.Context, *UserSignInRequest, *UserSignInResponse) error
+	SignUp(context.Context, *UserSignUpRequest, *emptypb.Empty) error
+	SignIn(context.Context, *UserSignInRequest, *TokenResponse) error
+	RefreshToken(context.Context, *RefreshTokenRequest, *TokenResponse) error
 }
 
 func MicroRegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, opts ...server.HandlerOption) error {
 	type userService interface {
-		SignUp(ctx context.Context, in *UserSignUpRequest, out *UserSignUpResponse) error
-		SignIn(ctx context.Context, in *UserSignInRequest, out *UserSignInResponse) error
+		SignUp(ctx context.Context, in *UserSignUpRequest, out *emptypb.Empty) error
+		SignIn(ctx context.Context, in *UserSignInRequest, out *TokenResponse) error
+		RefreshToken(ctx context.Context, in *RefreshTokenRequest, out *TokenResponse) error
 	}
 	type UserService struct {
 		userService
@@ -114,6 +135,12 @@ func MicroRegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, o
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "UserService.RefreshToken",
+		Path:    []string{"/identity/user:refreshToken"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&UserService{h}, opts...))
 }
 
@@ -121,10 +148,14 @@ type userServiceHandler struct {
 	UserServiceHandler
 }
 
-func (h *userServiceHandler) SignUp(ctx context.Context, in *UserSignUpRequest, out *UserSignUpResponse) error {
+func (h *userServiceHandler) SignUp(ctx context.Context, in *UserSignUpRequest, out *emptypb.Empty) error {
 	return h.UserServiceHandler.SignUp(ctx, in, out)
 }
 
-func (h *userServiceHandler) SignIn(ctx context.Context, in *UserSignInRequest, out *UserSignInResponse) error {
+func (h *userServiceHandler) SignIn(ctx context.Context, in *UserSignInRequest, out *TokenResponse) error {
 	return h.UserServiceHandler.SignIn(ctx, in, out)
+}
+
+func (h *userServiceHandler) RefreshToken(ctx context.Context, in *RefreshTokenRequest, out *TokenResponse) error {
+	return h.UserServiceHandler.RefreshToken(ctx, in, out)
 }
