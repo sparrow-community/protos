@@ -61,4 +61,5 @@ message TokenResponse {
 }
 
 message RefreshTokenRequest {
+  string refreshToken = 1;
 }
