@@ -15,9 +15,16 @@ service UserService {
     };
   }
 
-  rpc SignIn(UserSignInRequest) returns (TokenResponse) {
+  rpc SignIn(UserSignInRequest) returns (UserSignInResponse) {
     option (google.api.http) = {
       post: "/identity/user:signIn"
+      body: "*"
+    };
+  }
+
+  rpc Auth(UserAuthRequest) returns (TokenResponse) {
+    option (google.api.http) = {
+      post: "/identity/user/auth"
       body: "*"
     };
   }
@@ -51,6 +58,10 @@ message UserSignInRequest {
   string password = 2;
   UserCredentialType type = 3;
 }
+
+message UserSignInResponse {}
+
+message UserAuthRequest {}
 
 message TokenResponse {
   string accessToken = 1;
