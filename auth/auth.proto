@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option go_package="./;auth";
+package auth;
+
+service AuthService {
+
+  rpc AuthToken(AuthTokenRequest) returns (AuthZResourceRequest);
+
+  rpc AuthZResource(AuthZResourceRequest) returns (AuthZResourceResponse);
+
+}
+
+message AuthTokenRequest {
+  string token = 1;
+}
+
+message AuthTokenResponse {
+  bool ok = 1;
+}
+
+message AuthZResourceRequest {
+  string path = 1;
+}
+
+message AuthZResourceResponse {
+  bool ok = 1;
+}

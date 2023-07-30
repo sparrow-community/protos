@@ -6,3 +6,4 @@ option go_package="./;identity";
 //import "identity/user.proto";
 
 import "google/api/annotations.proto";
+

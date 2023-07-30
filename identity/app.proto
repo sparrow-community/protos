@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+option go_package="./;identity";
+package identity;
+
+import "google/api/annotations.proto";
+
+service AppService {
+
+  rpc Register(AppRegisterRequest) returns (AppRegisterResponse);
+
+  rpc PageResources(AppPageResourceRequest) returns (AppPageResourceResponse) {
+    option (google.api.http) = {
+      get: "/identity/app/page/resources"
+    };
+  }
+
+  rpc ApiResources(AppApiResourceRequest) returns (AppApiResourceResponse) {
+    option (google.api.http) = {
+      get: "/identity/app/api/resources"
+    };
+  }
+
+}
+
+enum ApiTypes {
+  HTTP = 0;
+  GRPC = 1;
+  ALL = 2;
+}
+
+message AppApiResource {
+  string id = 1;
+  string name = 2;
+  string grpcMethod = 3;
+  string httpPath = 4;
+  ApiTypes type = 5;
+  string description = 6;
+}
+
+message AppPageElResource {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  repeated AppApiResource apis = 4;
+}
+
+message AppPageResource {
+  string id = 1;
+  string name = 2;
+  string path = 3;
+  string description = 4;
+  repeated AppPageElResource elements = 5;
+}
+
+message AppRegisterRequest {
+  string id = 1;
+  string version = 2;
+  string commit = 3;
+  string description = 4;
+  string md5 = 5;
+  AppPageResource resource = 6;
+}
+message AppRegisterResponse {}
+
+message AppPageResourceRequest {
+}
+message AppPageResourceResponse {
+  repeated AppPageResource resources = 1;
+}
+
+message AppApiResourceRequest {
+}
+message AppApiResourceResponse {
+  repeated AppApiResource resources = 1;
+}

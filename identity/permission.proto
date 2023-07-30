@@ -1,0 +1,220 @@
+syntax = "proto3";
+
+option go_package="./;identity";
+package identity;
+
+import "google/api/annotations.proto";
+import "identity/app.proto";
+
+service PermissionService {
+
+  rpc Create(PermCreateRequest) returns (PermCreateResponse) {
+    option (google.api.http) = {
+      post: "/identity/permission"
+      body: "*"
+    };
+  }
+
+  rpc Read(PermReadRequest) returns (PermReadResponse) {
+    option (google.api.http) = {
+      get: "/identity/permission/{id}"
+    };
+  }
+
+  rpc Update(PermUpdateRequest) returns (PermUpdateResponse) {
+    option (google.api.http) = {
+      put: "/identity/permission/{id}"
+      body: "*"
+    };
+  }
+
+  rpc Delete(PermDeleteRequest) returns (PermDeleteResponse) {
+    option (google.api.http) = {
+      delete: "/identity/permission/{id}"
+    };
+  }
+
+  rpc List(PermListRequest) returns (PermListResponse) {
+    option (google.api.http) = {
+      get: "/identity/permissions"
+    };
+  }
+
+  // the page resources, `readonly` properties are indirect dependent on
+  rpc PageResources(PermPageResourceRequest) returns (PermPageResourceResponse) {
+    option (google.api.http) = {
+      get: "/identity/permission/{id}/page/resources"
+    };
+  }
+
+  rpc GrantPageResources(PermGrantPageResourceRequest) returns (PermGrantPageResourceResponse) {
+    option (google.api.http) = {
+      put: "/identity/permission/{id}/page/resource"
+      body: "*"
+    };
+  }
+
+  rpc DeletePageResource(PermDeletePageResourceRequest) returns (PermDeletePageResourceResponse) {
+    option (google.api.http) = {
+      delete: "/identity/permission/{permId}/page/{pageId}/resource"
+    };
+  }
+
+  // the api resources, `readonly` properties are indirect dependent on
+  rpc ApiResources(PermApiResourceRequest) returns (PermApiResourceResponse) {
+    option (google.api.http) = {
+      get: "/identity/permission/{id}/api/resources"
+    };
+  }
+
+  rpc GrantApiResources(PermGrantApiResourceRequest) returns (PermGrantApiResourceResponse) {
+    option (google.api.http) = {
+      put: "/identity/permission/{id}/api/resource"
+      body: "*"
+    };
+  }
+
+  rpc DeleteApiResource(PermDeleteApiResourceRequest) returns (PermDeleteApiResourceResponse) {
+    option (google.api.http) = {
+      delete: "/identity/permission/{permId}/api/{apiId}/resource"
+    };
+  }
+
+  rpc MenuResources(PermMenuResourceRequest) returns (PermMenuResourceRequest) {
+    option (google.api.http) = {
+      get: "/identity/permission/{id}/menu/resources"
+    };
+  }
+
+  rpc GrantMenuResource(PermGrantMenuResourceRequest) returns (PermGrantMenuResourceResponse) {
+    option (google.api.http) = {
+      put: "/identity/permission/{permId}/menu/resource"
+      body: "*"
+    };
+  }
+
+  rpc DeleteMenuResource(PermDeleteMenuResourceRequest) returns (PermDeleteMenuResourceResponse) {
+    option (google.api.http) = {
+      delete: "/identity/permission/{permId}/menu/{menuId}/resource"
+    };
+  }
+
+}
+
+// CRUD
+message PermCreateRequest {
+  string name = 1;
+  string description = 2;
+}
+message PermCreateResponse {}
+
+message PermReadRequest {
+  string id = 1;
+}
+message PermReadResponse {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message PermUpdateRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+}
+message PermUpdateResponse {}
+
+message PermDeleteRequest {
+  string id = 1;
+}
+message PermDeleteResponse{}
+
+message PermListRequest {}
+message PermListResponse {
+  repeated PermReadResponse permissions = 1;
+}
+
+// page resource
+message PermPageResourceRequest{
+  string id = 1;
+}
+message PermPageResource {
+  string id = 1;
+  string name = 2;
+  string path = 3;
+  string description = 4;
+  bool readonly = 5;
+}
+message PermPageResourceResponse{
+  repeated PermPageResource resources = 1;
+}
+
+message PermGrantPageResourceRequest {
+  string id = 1;
+  repeated string pageResourceIds = 2;
+}
+message PermGrantPageResourceResponse {}
+
+message PermDeletePageResourceRequest {
+  string permId = 1;
+  string pageId = 2;
+}
+message PermDeletePageResourceResponse {}
+
+// api resource
+message PermApiResourceRequest {
+  string id = 1;
+}
+message PermApiResource {
+  string id = 1;
+  string name = 2;
+  string grpcMethod = 3;
+  string httpPath = 4;
+  ApiTypes type = 5;
+  string description = 6;
+  bool readonly = 7;
+}
+message PermApiResourceResponse {
+  repeated PermApiResource resources = 1;
+}
+
+message PermGrantApiResourceRequest {
+  string id = 1;
+  repeated string apiResourceIds = 2;
+}
+message PermGrantApiResourceResponse {}
+
+message PermDeleteApiResourceRequest {
+  string permId = 1;
+  string apiId = 2;
+}
+message PermDeleteApiResourceResponse {}
+
+// menu resource
+message PermMenuResourceRequest {
+  string id = 1;
+}
+message PermMenuPageResource {
+  string id = 1;
+  string name = 2;
+  AppPageResource resource = 3;
+  repeated PermMenuPageResource children = 4;
+}
+message PermMenuResourceResponse {
+  PermMenuPageResource resources = 1;
+}
+
+message PermGrantMenuResourceRequest {
+  string name = 1;
+  string permId = 2;
+  string pageId = 3;
+  string parentId = 4;
+  repeated string pageElements = 5;
+}
+message PermGrantMenuResourceResponse {}
+
+message PermDeleteMenuResourceRequest{
+  string permId = 1;
+  string menuId = 2;
+}
+message PermDeleteMenuResourceResponse{}

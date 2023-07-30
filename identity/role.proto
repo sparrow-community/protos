@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+option go_package="./;identity";
+
+package identity;
+
+import "google/api/annotations.proto";
+import "identity/permission.proto";
+
+service RoleService {
+
+  rpc Create(RoleCreateRequest) returns (RoleCreateResponse) {
+    option (google.api.http) = {
+      post: "/identity/role"
+      body: "*"
+    };
+  }
+
+  rpc Read(RoleReadRequest) returns (RoleReadResponse) {
+    option (google.api.http) = {
+      get: "/identity/role/{id}"
+    };
+  }
+
+  rpc Update(RoleUpdateRequest) returns (RoleUpdateResponse) {
+    option (google.api.http) = {
+      put: "/identity/role/{id}"
+      body: "*"
+    };
+  }
+
+  rpc Delete(RoleDeleteRequest) returns (RoleDeleteResponse) {
+    option (google.api.http) = {
+      delete: "/identity/role/{id}"
+    };
+  }
+
+  rpc ReadTree(RoleTreeRequest) returns (RoleTreeResponse) {
+    option (google.api.http) = {
+      get: "/identity/role:tree"
+    };
+  }
+
+  rpc GrantPermissions(RoleGrantPermissionRequest) returns (RoleGrantPermissionResponse) {
+    option (google.api.http) = {
+      post: "/identity/role/permissions"
+    };
+  }
+
+  rpc GetPermissions(GetPermissionRequest) returns (GetPermissionResponse) {
+    option (google.api.http) = {
+      get: "/identity/role/{id}/permissions"
+    };
+  }
+
+}
+
+message RoleCreateRequest {
+  string name = 1;
+  string parentId = 2;
+  int32 priority = 3;
+}
+message RoleCreateResponse {}
+
+message RoleReadRequest {
+  string id = 1;
+}
+message RoleReadResponse {
+  string id = 1;
+  string name = 2;
+  string parentId = 3;
+  int32 priority = 4;
+}
+
+message RoleUpdateRequest {
+  string id = 1;
+  string name = 2;
+  string parentId = 3;
+  int32 priority = 4;
+}
+message RoleUpdateResponse {
+}
+
+message RoleDeleteRequest {
+  string id = 1;
+}
+message RoleDeleteResponse {}
+
+message RoleTreeRequest {}
+message RoleTreeResponse {
+  string id = 1;
+  string name = 2;
+  string parentId = 3;
+  int32 priority = 4;
+  repeated RoleTreeResponse children = 5;
+}
+
+message RoleGrantPermissionRequest {
+  string id = 1;
+  repeated string permissionIds = 2;
+}
+message RoleGrantPermissionResponse {}
+
+message GetPermissionRequest {
+  string id = 1;
+}
+message GetPermissionResponse {
+  repeated PermReadResponse permissions = 1;
+}

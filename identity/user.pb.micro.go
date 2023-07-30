@@ -47,12 +47,6 @@ func NewUserServiceEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
-			Name:    "UserService.AuthN",
-			Path:    []string{"/identity/user/auth"},
-			Method:  []string{"POST"},
-			Handler: "rpc",
-		},
-		{
 			Name:    "UserService.RefreshToken",
 			Path:    []string{"/identity/user:refreshToken"},
 			Method:  []string{"POST"},
@@ -66,8 +60,7 @@ func NewUserServiceEndpoints() []*api.Endpoint {
 type UserService interface {
 	SignUp(ctx context.Context, in *UserSignUpRequest, opts ...client.CallOption) (*emptypb.Empty, error)
 	SignIn(ctx context.Context, in *UserSignInRequest, opts ...client.CallOption) (*UserSignInResponse, error)
-	Auth(ctx context.Context, in *UserAuthRequest, opts ...client.CallOption) (*TokenResponse, error)
-	RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...client.CallOption) (*TokenResponse, error)
+	RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...client.CallOption) (*RefreshTokenResponse, error)
 }
 
 type userService struct {
@@ -102,19 +95,9 @@ func (c *userService) SignIn(ctx context.Context, in *UserSignInRequest, opts ..
 	return out, nil
 }
 
-func (c *userService) Auth(ctx context.Context, in *UserAuthRequest, opts ...client.CallOption) (*TokenResponse, error) {
-	req := c.c.NewRequest(c.name, "UserService.AuthN", in)
-	out := new(TokenResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userService) RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...client.CallOption) (*TokenResponse, error) {
+func (c *userService) RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...client.CallOption) (*RefreshTokenResponse, error) {
 	req := c.c.NewRequest(c.name, "UserService.RefreshToken", in)
-	out := new(TokenResponse)
+	out := new(RefreshTokenResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -127,16 +110,14 @@ func (c *userService) RefreshToken(ctx context.Context, in *RefreshTokenRequest,
 type UserServiceHandler interface {
 	SignUp(context.Context, *UserSignUpRequest, *emptypb.Empty) error
 	SignIn(context.Context, *UserSignInRequest, *UserSignInResponse) error
-	Auth(context.Context, *UserAuthRequest, *TokenResponse) error
-	RefreshToken(context.Context, *RefreshTokenRequest, *TokenResponse) error
+	RefreshToken(context.Context, *RefreshTokenRequest, *RefreshTokenResponse) error
 }
 
 func MicroRegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, opts ...server.HandlerOption) error {
 	type userService interface {
 		SignUp(ctx context.Context, in *UserSignUpRequest, out *emptypb.Empty) error
 		SignIn(ctx context.Context, in *UserSignInRequest, out *UserSignInResponse) error
-		Auth(ctx context.Context, in *UserAuthRequest, out *TokenResponse) error
-		RefreshToken(ctx context.Context, in *RefreshTokenRequest, out *TokenResponse) error
+		RefreshToken(ctx context.Context, in *RefreshTokenRequest, out *RefreshTokenResponse) error
 	}
 	type UserService struct {
 		userService
@@ -151,12 +132,6 @@ func MicroRegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, o
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "UserService.SignIn",
 		Path:    []string{"/identity/user:signIn"},
-		Method:  []string{"POST"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "UserService.AuthN",
-		Path:    []string{"/identity/user/auth"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
@@ -181,10 +156,6 @@ func (h *userServiceHandler) SignIn(ctx context.Context, in *UserSignInRequest, 
 	return h.UserServiceHandler.SignIn(ctx, in, out)
 }
 
-func (h *userServiceHandler) Auth(ctx context.Context, in *UserAuthRequest, out *TokenResponse) error {
-	return h.UserServiceHandler.Auth(ctx, in, out)
-}
-
-func (h *userServiceHandler) RefreshToken(ctx context.Context, in *RefreshTokenRequest, out *TokenResponse) error {
+func (h *userServiceHandler) RefreshToken(ctx context.Context, in *RefreshTokenRequest, out *RefreshTokenResponse) error {
 	return h.UserServiceHandler.RefreshToken(ctx, in, out)
 }

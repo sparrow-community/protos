@@ -20,10 +20,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UserService_SignUp_FullMethodName       = "/UserService/SignUp"
-	UserService_SignIn_FullMethodName       = "/UserService/SignIn"
-	UserService_Auth_FullMethodName         = "/UserService/AuthN"
-	UserService_RefreshToken_FullMethodName = "/UserService/RefreshToken"
+	UserService_SignUp_FullMethodName       = "/identity.UserService/SignUp"
+	UserService_SignIn_FullMethodName       = "/identity.UserService/SignIn"
+	UserService_RefreshToken_FullMethodName = "/identity.UserService/RefreshToken"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -32,8 +31,7 @@ const (
 type UserServiceClient interface {
 	SignUp(ctx context.Context, in *UserSignUpRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SignIn(ctx context.Context, in *UserSignInRequest, opts ...grpc.CallOption) (*UserSignInResponse, error)
-	Auth(ctx context.Context, in *UserAuthRequest, opts ...grpc.CallOption) (*TokenResponse, error)
-	RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...grpc.CallOption) (*TokenResponse, error)
+	RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...grpc.CallOption) (*RefreshTokenResponse, error)
 }
 
 type userServiceClient struct {
@@ -62,17 +60,8 @@ func (c *userServiceClient) SignIn(ctx context.Context, in *UserSignInRequest, o
 	return out, nil
 }
 
-func (c *userServiceClient) Auth(ctx context.Context, in *UserAuthRequest, opts ...grpc.CallOption) (*TokenResponse, error) {
-	out := new(TokenResponse)
-	err := c.cc.Invoke(ctx, UserService_Auth_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...grpc.CallOption) (*TokenResponse, error) {
-	out := new(TokenResponse)
+func (c *userServiceClient) RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...grpc.CallOption) (*RefreshTokenResponse, error) {
+	out := new(RefreshTokenResponse)
 	err := c.cc.Invoke(ctx, UserService_RefreshToken_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -86,8 +75,7 @@ func (c *userServiceClient) RefreshToken(ctx context.Context, in *RefreshTokenRe
 type UserServiceServer interface {
 	SignUp(context.Context, *UserSignUpRequest) (*emptypb.Empty, error)
 	SignIn(context.Context, *UserSignInRequest) (*UserSignInResponse, error)
-	Auth(context.Context, *UserAuthRequest) (*TokenResponse, error)
-	RefreshToken(context.Context, *RefreshTokenRequest) (*TokenResponse, error)
+	RefreshToken(context.Context, *RefreshTokenRequest) (*RefreshTokenResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -101,10 +89,7 @@ func (UnimplementedUserServiceServer) SignUp(context.Context, *UserSignUpRequest
 func (UnimplementedUserServiceServer) SignIn(context.Context, *UserSignInRequest) (*UserSignInResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignIn not implemented")
 }
-func (UnimplementedUserServiceServer) Auth(context.Context, *UserAuthRequest) (*TokenResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AuthN not implemented")
-}
-func (UnimplementedUserServiceServer) RefreshToken(context.Context, *RefreshTokenRequest) (*TokenResponse, error) {
+func (UnimplementedUserServiceServer) RefreshToken(context.Context, *RefreshTokenRequest) (*RefreshTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshToken not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
@@ -156,24 +141,6 @@ func _UserService_SignIn_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_Auth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserAuthRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).Auth(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_Auth_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).Auth(ctx, req.(*UserAuthRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _UserService_RefreshToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RefreshTokenRequest)
 	if err := dec(in); err != nil {
@@ -196,7 +163,7 @@ func _UserService_RefreshToken_Handler(srv interface{}, ctx context.Context, dec
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var UserService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "UserService",
+	ServiceName: "identity.UserService",
 	HandlerType: (*UserServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -206,10 +173,6 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SignIn",
 			Handler:    _UserService_SignIn_Handler,
-		},
-		{
-			MethodName: "AuthN",
-			Handler:    _UserService_Auth_Handler,
 		},
 		{
 			MethodName: "RefreshToken",
