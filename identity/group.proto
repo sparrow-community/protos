@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+option go_package="./;identity";
+package identity;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+import "identity/role.proto";
+
+service GroupService {
+  rpc Create(GroupCreateRequest) returns (GroupCreateResponse) {
+    option (google.api.http) = {
+      post: "/identity/group"
+      body: "*"
+    };
+  }
+
+  rpc Read(GroupReadRequest) returns (GroupReadResponse) {
+    option (google.api.http) = {
+      get: "/identity/group/{id}"
+    };
+  }
+
+  rpc Update(GroupUpdateRequest) returns (GroupUpdateResponse) {
+    option (google.api.http) = {
+      put: "/identity/group/{id}"
+      body: "*"
+    };
+  }
+
+  rpc Delete(GroupDeleteRequest) returns (GroupDeleteGroup) {
+    option (google.api.http) = {
+      delete: "/identity/group/{id}"
+    };
+  }
+
+  rpc List(GroupTreeRequest) returns (GroupTreeResponse) {
+    option (google.api.http) = {
+      get: "/identity/group:tree"
+    };
+  }
+
+  rpc Roles(GroupRolesRequest) returns (GroupRolesResponse) {
+    option (google.api.http) = {
+      get: "/identity/group/{id}/roles"
+    };
+  }
+
+  rpc GrantRoles(GroupGrantRolesRequest) returns (GroupGrantRolesResponse) {
+    option (google.api.http) = {
+      post: "/identity/group/{id}/roles"
+      body: "*"
+    };
+  }
+}
+
+message GroupCreateRequest {
+  string name = 1;
+  int64 parent = 2;
+}
+message GroupCreateResponse {
+  int64 id = 1;
+}
+
+message GroupReadRequest {
+  int64 id = 1;
+}
+message GroupReadResponse {
+  int64 id = 1;
+  string name = 2;
+  int64 parentId = 3;
+}
+
+message GroupUpdateRequest {
+  int64 id = 1;
+  string name = 2;
+  int64 parentId = 3;
+}
+message GroupUpdateResponse {
+}
+
+message GroupDeleteRequest {
+  int64 id = 1;
+}
+message GroupDeleteGroup {}
+
+message GroupTreeRequest {}
+message GroupTreeItemResponse {
+  int64 id = 1;
+  string name = 2;
+  int64 parentId = 3;
+  repeated GroupTreeItemResponse children = 4;
+}
+message GroupTreeResponse {
+  repeated GroupTreeItemResponse children = 1;
+}
+
+message GroupRolesRequest {
+  int64 id = 1;
+}
+message GroupRolesResponse {
+  RoleTreeItemResponse roles = 1;
+}
+
+message GroupGrantRolesRequest {
+  int64 id = 1;
+  repeated string roleIds = 2;
+}
+message GroupGrantRolesResponse {}

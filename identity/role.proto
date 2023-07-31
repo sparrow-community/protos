@@ -87,12 +87,15 @@ message RoleDeleteRequest {
 message RoleDeleteResponse {}
 
 message RoleTreeRequest {}
-message RoleTreeResponse {
+message RoleTreeItemResponse {
   string id = 1;
   string name = 2;
   string parentId = 3;
   int32 priority = 4;
-  repeated RoleTreeResponse children = 5;
+  repeated RoleTreeItemResponse children = 5;
+}
+message RoleTreeResponse {
+  repeated RoleTreeItemResponse children = 1;
 }
 
 message RoleGrantPermissionRequest {
