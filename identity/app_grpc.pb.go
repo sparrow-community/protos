@@ -28,7 +28,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AppServiceClient interface {
-	Register(ctx context.Context, in *AppRegisterRequest, opts ...grpc.CallOption) (*AppRegisterResponse, error)
+	Register(ctx context.Context, opts ...grpc.CallOption) (AppService_RegisterClient, error)
 	PageResources(ctx context.Context, in *AppPageResourceRequest, opts ...grpc.CallOption) (*AppPageResourceResponse, error)
 	ApiResources(ctx context.Context, in *AppApiResourceRequest, opts ...grpc.CallOption) (*AppApiResourceResponse, error)
 }
@@ -41,13 +41,35 @@ func NewAppServiceClient(cc grpc.ClientConnInterface) AppServiceClient {
 	return &appServiceClient{cc}
 }
 
-func (c *appServiceClient) Register(ctx context.Context, in *AppRegisterRequest, opts ...grpc.CallOption) (*AppRegisterResponse, error) {
-	out := new(AppRegisterResponse)
-	err := c.cc.Invoke(ctx, AppService_Register_FullMethodName, in, out, opts...)
+func (c *appServiceClient) Register(ctx context.Context, opts ...grpc.CallOption) (AppService_RegisterClient, error) {
+	stream, err := c.cc.NewStream(ctx, &AppService_ServiceDesc.Streams[0], AppService_Register_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &appServiceRegisterClient{stream}
+	return x, nil
+}
+
+type AppService_RegisterClient interface {
+	Send(*AppRegisterRequest) error
+	Recv() (*AppRegisterResponse, error)
+	grpc.ClientStream
+}
+
+type appServiceRegisterClient struct {
+	grpc.ClientStream
+}
+
+func (x *appServiceRegisterClient) Send(m *AppRegisterRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *appServiceRegisterClient) Recv() (*AppRegisterResponse, error) {
+	m := new(AppRegisterResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *appServiceClient) PageResources(ctx context.Context, in *AppPageResourceRequest, opts ...grpc.CallOption) (*AppPageResourceResponse, error) {
@@ -72,7 +94,7 @@ func (c *appServiceClient) ApiResources(ctx context.Context, in *AppApiResourceR
 // All implementations must embed UnimplementedAppServiceServer
 // for forward compatibility
 type AppServiceServer interface {
-	Register(context.Context, *AppRegisterRequest) (*AppRegisterResponse, error)
+	Register(AppService_RegisterServer) error
 	PageResources(context.Context, *AppPageResourceRequest) (*AppPageResourceResponse, error)
 	ApiResources(context.Context, *AppApiResourceRequest) (*AppApiResourceResponse, error)
 	mustEmbedUnimplementedAppServiceServer()
@@ -82,8 +104,8 @@ type AppServiceServer interface {
 type UnimplementedAppServiceServer struct {
 }
 
-func (UnimplementedAppServiceServer) Register(context.Context, *AppRegisterRequest) (*AppRegisterResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
+func (UnimplementedAppServiceServer) Register(AppService_RegisterServer) error {
+	return status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
 func (UnimplementedAppServiceServer) PageResources(context.Context, *AppPageResourceRequest) (*AppPageResourceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PageResources not implemented")
@@ -104,22 +126,30 @@ func RegisterAppServiceServer(s grpc.ServiceRegistrar, srv AppServiceServer) {
 	s.RegisterService(&AppService_ServiceDesc, srv)
 }
 
-func _AppService_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AppRegisterRequest)
-	if err := dec(in); err != nil {
+func _AppService_Register_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(AppServiceServer).Register(&appServiceRegisterServer{stream})
+}
+
+type AppService_RegisterServer interface {
+	Send(*AppRegisterResponse) error
+	Recv() (*AppRegisterRequest, error)
+	grpc.ServerStream
+}
+
+type appServiceRegisterServer struct {
+	grpc.ServerStream
+}
+
+func (x *appServiceRegisterServer) Send(m *AppRegisterResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *appServiceRegisterServer) Recv() (*AppRegisterRequest, error) {
+	m := new(AppRegisterRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
-	if interceptor == nil {
-		return srv.(AppServiceServer).Register(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AppService_Register_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AppServiceServer).Register(ctx, req.(*AppRegisterRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return m, nil
 }
 
 func _AppService_PageResources_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -166,10 +196,6 @@ var AppService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AppServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Register",
-			Handler:    _AppService_Register_Handler,
-		},
-		{
 			MethodName: "PageResources",
 			Handler:    _AppService_PageResources_Handler,
 		},
@@ -178,6 +204,13 @@ var AppService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AppService_ApiResources_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Register",
+			Handler:       _AppService_Register_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "identity/app.proto",
 }

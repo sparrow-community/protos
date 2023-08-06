@@ -84,7 +84,7 @@ func (Types) EnumDescriptor() ([]byte, []int) {
 	return file_id_id_proto_rawDescGZIP(), []int{0}
 }
 
-// Generate a unique ID. Defaults to uuid.
+// Generate a unique Id. Defaults to uuid.
 type GenerateRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

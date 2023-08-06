@@ -50,7 +50,7 @@ func NewAppServiceEndpoints() []*api.Endpoint {
 // Client API for AppService service
 
 type AppService interface {
-	Register(ctx context.Context, in *AppRegisterRequest, opts ...client.CallOption) (*AppRegisterResponse, error)
+	Register(ctx context.Context, opts ...client.CallOption) (AppService_RegisterService, error)
 	PageResources(ctx context.Context, in *AppPageResourceRequest, opts ...client.CallOption) (*AppPageResourceResponse, error)
 	ApiResources(ctx context.Context, in *AppApiResourceRequest, opts ...client.CallOption) (*AppApiResourceResponse, error)
 }
@@ -67,14 +67,60 @@ func NewAppService(name string, c client.Client) AppService {
 	}
 }
 
-func (c *appService) Register(ctx context.Context, in *AppRegisterRequest, opts ...client.CallOption) (*AppRegisterResponse, error) {
-	req := c.c.NewRequest(c.name, "AppService.Register", in)
-	out := new(AppRegisterResponse)
-	err := c.c.Call(ctx, req, out, opts...)
+func (c *appService) Register(ctx context.Context, opts ...client.CallOption) (AppService_RegisterService, error) {
+	req := c.c.NewRequest(c.name, "AppService.Register", &AppRegisterRequest{})
+	stream, err := c.c.Stream(ctx, req, opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	return &appServiceRegister{stream}, nil
+}
+
+type AppService_RegisterService interface {
+	Context() context.Context
+	SendMsg(interface{}) error
+	RecvMsg(interface{}) error
+	CloseSend() error
+	Close() error
+	Send(*AppRegisterRequest) error
+	Recv() (*AppRegisterResponse, error)
+}
+
+type appServiceRegister struct {
+	stream client.Stream
+}
+
+func (x *appServiceRegister) CloseSend() error {
+	return x.stream.CloseSend()
+}
+
+func (x *appServiceRegister) Close() error {
+	return x.stream.Close()
+}
+
+func (x *appServiceRegister) Context() context.Context {
+	return x.stream.Context()
+}
+
+func (x *appServiceRegister) SendMsg(m interface{}) error {
+	return x.stream.Send(m)
+}
+
+func (x *appServiceRegister) RecvMsg(m interface{}) error {
+	return x.stream.Recv(m)
+}
+
+func (x *appServiceRegister) Send(m *AppRegisterRequest) error {
+	return x.stream.Send(m)
+}
+
+func (x *appServiceRegister) Recv() (*AppRegisterResponse, error) {
+	m := new(AppRegisterResponse)
+	err := x.stream.Recv(m)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *appService) PageResources(ctx context.Context, in *AppPageResourceRequest, opts ...client.CallOption) (*AppPageResourceResponse, error) {
@@ -100,14 +146,14 @@ func (c *appService) ApiResources(ctx context.Context, in *AppApiResourceRequest
 // Server API for AppService service
 
 type AppServiceHandler interface {
-	Register(context.Context, *AppRegisterRequest, *AppRegisterResponse) error
+	Register(context.Context, AppService_RegisterStream) error
 	PageResources(context.Context, *AppPageResourceRequest, *AppPageResourceResponse) error
 	ApiResources(context.Context, *AppApiResourceRequest, *AppApiResourceResponse) error
 }
 
 func MicroRegisterAppServiceHandler(s server.Server, hdlr AppServiceHandler, opts ...server.HandlerOption) error {
 	type appService interface {
-		Register(ctx context.Context, in *AppRegisterRequest, out *AppRegisterResponse) error
+		Register(ctx context.Context, stream server.Stream) error
 		PageResources(ctx context.Context, in *AppPageResourceRequest, out *AppPageResourceResponse) error
 		ApiResources(ctx context.Context, in *AppApiResourceRequest, out *AppApiResourceResponse) error
 	}
@@ -134,8 +180,49 @@ type appServiceHandler struct {
 	AppServiceHandler
 }
 
-func (h *appServiceHandler) Register(ctx context.Context, in *AppRegisterRequest, out *AppRegisterResponse) error {
-	return h.AppServiceHandler.Register(ctx, in, out)
+func (h *appServiceHandler) Register(ctx context.Context, stream server.Stream) error {
+	return h.AppServiceHandler.Register(ctx, &appServiceRegisterStream{stream})
+}
+
+type AppService_RegisterStream interface {
+	Context() context.Context
+	SendMsg(interface{}) error
+	RecvMsg(interface{}) error
+	Close() error
+	Send(*AppRegisterResponse) error
+	Recv() (*AppRegisterRequest, error)
+}
+
+type appServiceRegisterStream struct {
+	stream server.Stream
+}
+
+func (x *appServiceRegisterStream) Close() error {
+	return x.stream.Close()
+}
+
+func (x *appServiceRegisterStream) Context() context.Context {
+	return x.stream.Context()
+}
+
+func (x *appServiceRegisterStream) SendMsg(m interface{}) error {
+	return x.stream.Send(m)
+}
+
+func (x *appServiceRegisterStream) RecvMsg(m interface{}) error {
+	return x.stream.Recv(m)
+}
+
+func (x *appServiceRegisterStream) Send(m *AppRegisterResponse) error {
+	return x.stream.Send(m)
+}
+
+func (x *appServiceRegisterStream) Recv() (*AppRegisterRequest, error) {
+	m := new(AppRegisterRequest)
+	if err := x.stream.Recv(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (h *appServiceHandler) PageResources(ctx context.Context, in *AppPageResourceRequest, out *AppPageResourceResponse) error {

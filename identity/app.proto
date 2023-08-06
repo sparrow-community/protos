@@ -7,7 +7,7 @@ import "google/api/annotations.proto";
 
 service AppService {
 
-  rpc Register(AppRegisterRequest) returns (AppRegisterResponse);
+  rpc Register(stream AppRegisterRequest) returns (stream AppRegisterResponse);
 
   rpc PageResources(AppPageResourceRequest) returns (AppPageResourceResponse) {
     option (google.api.http) = {
@@ -33,7 +33,7 @@ message AppApiResource {
   string id = 1;
   string name = 2;
   string grpcMethod = 3;
-  string httpPath = 4;
+  string httpUri = 4;
   ApiTypes type = 5;
   string description = 6;
 }
@@ -48,7 +48,7 @@ message AppPageElResource {
 message AppPageResource {
   string id = 1;
   string name = 2;
-  string path = 3;
+  string uri = 3;
   string description = 4;
   repeated AppPageElResource elements = 5;
 }
